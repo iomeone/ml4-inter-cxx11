@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 
 enum { Lt, Plus, Mult };
 
@@ -89,6 +90,7 @@ public:
     void set_trace (bool x) { m_trace = x; }
     std::string str (int e) const;
     std::string result (void) const;
+    std::string str_cek (void) const;
     cell_type const& at (int addr) const;
     int lookup (int const x);
     void eval (void);

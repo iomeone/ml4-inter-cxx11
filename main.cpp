@@ -11,6 +11,7 @@ int
 main (int argc, char* argv[])
 {
     cek_type cek;
+    cek.set_trace (false);
     scanner_type token;
     parser_cb_cek_type exp (&cek);
     for (std::string line;;) {

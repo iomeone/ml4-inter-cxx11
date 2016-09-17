@@ -1,7 +1,10 @@
 PROG=ml4
 OBJS=main.o \
      symbol.o \
-     cek.o \
+     cek-machine.o \
+     cek-memory.o \
+     cek-lrstack.o \
+     cek-sprint.o \
      parser.o \
      parser-cb-cek.o \
      scanner.o
@@ -27,8 +30,17 @@ main.o : main.cpp
 symbol.o : symbol.cpp symbol.hpp
 	$(CXX) $(CXXFLAGS) -c symbol.cpp -o $@
 
-cek.o : cek.cpp cek.hpp
-	$(CXX) $(CXXFLAGS) -c cek.cpp -o $@
+cek-machine.o : cek-machine.cpp cek.hpp
+	$(CXX) $(CXXFLAGS) -c cek-machine.cpp -o $@
+
+cek-memory.o : cek-memory.cpp cek.hpp
+	$(CXX) $(CXXFLAGS) -c cek-memory.cpp -o $@
+
+cek-lrstack.o : cek-lrstack.cpp cek.hpp
+	$(CXX) $(CXXFLAGS) -c cek-lrstack.cpp -o $@
+
+cek-sprint.o : cek-sprint.cpp cek.hpp
+	$(CXX) $(CXXFLAGS) -c cek-sprint.cpp -o $@
 
 parser.o : parser.cpp parser.hpp
 	$(CXX) $(CXXFLAGS) -c parser.cpp -o $@
