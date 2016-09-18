@@ -1,4 +1,5 @@
 #include "scanner.hpp"
+#include <iostream>
 
 // Lexical token scanner
 //
@@ -62,22 +63,20 @@ scanner_type::next (std::istream& cin)
     for (int next_state = START; next_state > 0; ) {
         int const state = next_state;
         next_state = ERROR;
+        int const ch = cin.peek ();
         if (cin.eof ()) {
             if (START == state) {
                 m_kind = SEOF;
                 return success ();
             }
         }
-        else {
-            int const ch = cin.peek ();
-            int const code = 0 < ch && ch < 127 ? CODE[ch] - '@' : 0;
-            if (forward (state, code, next_state)) {
-                if (START != next_state) {
-                    m_value.push_back (ch);
-                }
-                cin.get ();
-                continue;
+        int const code = 0 < ch && ch < 127 ? CODE[ch] - '@' : 0;
+        if (forward (state, code, next_state)) {
+            if (START != next_state) {
+                m_value.push_back (ch);
             }
+            cin.get ();
+            continue;
         }
         if (forward (state, OK, m_kind)) {
             if (m_kind > 0) {

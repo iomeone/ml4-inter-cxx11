@@ -14,16 +14,13 @@ main (int argc, char* argv[])
     cek.set_trace (false);
     scanner_type token;
     parser_cb_cek_type exp (&cek);
-    for (std::string line;;) {
-        if (! std::getline (std::cin, line)) {
+    for (std::string line; ; ) {
+        if (! std::getline (std::cin, line) || line == "exit;;") {
             break;
         }
-        if (line.find ("exit;;") != line.npos) {
-            break;
-        }
-        std::stringstream linein (line);
+        std::stringstream input (line);
         exp.clear ();
-        if (! parse (linein, token, exp)) {
+        if (! parse (input, token, exp)) {
             std::cout << "SyntaxError!" << std::endl;
         }
         else {

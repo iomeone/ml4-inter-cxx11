@@ -3,11 +3,13 @@
 #include <sstream>
 
 void test1 (test::simple& ts);
+void test2 (test::simple& ts);
 
 int main (int argc, char* argv[])
 {
     test::simple ts;
     test1 (ts);
+    test2 (ts);
     return ts.done_testing ();
 }
 
@@ -70,6 +72,16 @@ void test1 (test::simple& ts)
     ts.ok (tok.value () == "false", "false");
     ts.ok (tok.next (cin), "next");
     ts.ok (tok.kind () == SLPAREN, "(");
+    ts.ok (tok.next (cin), "next");
+    ts.ok (tok.kind () == SEOF, "EOF");
+}
+
+void test2 (test::simple& ts)
+{
+    scanner_type tok;
+    std::istringstream cin ("  \n;;\n");
+    ts.ok (tok.next (cin), "next");
+    ts.ok (tok.kind () == SSEMISEMI, ";;");
     ts.ok (tok.next (cin), "next");
     ts.ok (tok.kind () == SEOF, "EOF");
 }
