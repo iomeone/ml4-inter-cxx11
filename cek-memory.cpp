@@ -51,6 +51,13 @@ cek_type::gcmark (int const root)
     while (top < cell_size) {
         int const cur = top;
         top = m_cell[cur].forw;
+        if (KIf == m_cell[cur].tag) {
+            int const child1 = m_cell[cur].e1;
+            if (m_cell[child1].forw == 0) {
+                m_cell[child1].forw = top;
+                top = child1;
+            }
+        }
         int const child2 = m_cell[cur].e2;
         if (m_cell[child2].forw == 0) {
             m_cell[child2].forw = top;
