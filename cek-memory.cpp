@@ -28,7 +28,7 @@ cek_type::gc (int const tag, int const e1, int const e2, int const e3, int const
     gcmark (m_env);
     gcmark (m_kont);
     gcmark (m_protect);
-    if (tag == KIf) {
+    if (KIf == tag) {
         gcmark (e1);
     }
     gcmark (e2);
@@ -51,12 +51,10 @@ cek_type::gcmark (int const root)
     while (top < cell_size) {
         int const cur = top;
         top = m_cell[cur].forw;
-        if (KIf == m_cell[cur].tag) {
-            int const child1 = m_cell[cur].e1;
-            if (m_cell[child1].forw == 0) {
-                m_cell[child1].forw = top;
-                top = child1;
-            }
+        int const child1 = m_cell[cur].e1;
+        if (KIf == m_cell[cur].tag && m_cell[child1].forw == 0) {
+            m_cell[child1].forw = top;
+            top = child1;
         }
         int const child2 = m_cell[cur].e2;
         if (m_cell[child2].forw == 0) {
