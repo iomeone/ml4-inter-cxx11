@@ -44,7 +44,10 @@ cek_type::eval (void)
 void
 cek_type::turn (void)
 {
-    switch (m_ctrl == 0 ? Error : m_cell[m_ctrl].tag) {
+    if (0 == m_ctrl) {
+        return croak (InvalidControl);
+    }
+    switch (m_cell[m_ctrl].tag) {
     case Decl:
         turn_let (KDecl);
         break;
@@ -91,7 +94,10 @@ cek_type::turn (void)
 void
 cek_type::turn_rt (void)
 {
-    int const ktag = m_kont == 0 ? KStop : m_cell[m_kont].tag;
+    if (0 == m_kont) {
+        return croak (InvalidContinuation);
+    }
+    int const ktag = m_cell[m_kont].tag;
     switch (ktag) {
     case KStop:
         break;
