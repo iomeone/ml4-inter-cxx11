@@ -108,6 +108,7 @@ public:
 private:
     void print_trace (void);
     int cons (int const tag, int const e1, int const e2, int const e3, int const e4);
+    int ctrl_nth_leftvalue (int const nth);
     void turn_krt (void);
     void turn_let (int const ktag);
     void turn_klet (int const ktag);
