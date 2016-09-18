@@ -4,7 +4,7 @@
 #include "cek.hpp"
 
 static const char* format[] = {
-    "(Error $1e)",
+    "$1e",
     "()",
     "(Decl $1x $2m)",
     "(DeclRec $1x $2m)",
@@ -13,10 +13,10 @@ static const char* format[] = {
     "(If $2m $3m $4m)",
     "(Ap $2m $3m)",
     "($1o $2m $3m)",
-    "(Fun $1x $2d)",
+    "(Fun $1x $2m)",
     "(Ref $1x)",
-    "#e$1d",
-    "#$1b",
+    "(ILit $1d)",
+    "(BLit $1b)",
     "(Rt $2m)",
     "(Proc $1x #$2d# #$3d#)",
     "$1d",
@@ -77,7 +77,7 @@ cek_type::str_cek (void) const
     std::string t = "---\n";
     t += " C: " + str (m_ctrl) + "\n";
     t += " E: " + str (m_env) + "\n";
-    t += " K: " + str (m_ctrl);
+    t += " K: " + str (m_kont);
     return t;
 }
 
