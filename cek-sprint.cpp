@@ -28,11 +28,11 @@ static const char* format[] = {
     "(KDeclRec $1x #$3d# $4m)",
     "(KLet $1x $2m #$3d# $4m)",
     "(KLetRec $1x $2m #$3d# $4m)",
-    "(KIf $2m $3m $4m)",
+    "(KIf $1m $2m #$3d# $4m)",
     "(KAp $2m #$3d# $4m)",
-    "(KProc $1x $2m #$3d# $4m)",
-    "(KPrim1 $1o $2m $4m)",
-    "(KPrim2 $1o $2m $4m)",
+    "(KProc $1x #$2d# #$3d# $4m)",
+    "(KPrim1 $1o $2m #$3d# $4m)",
+    "(KPrim2 $1o $2m #$3d# $4m)",
 };
 
 static const char* primitive_operator[] = {"<", "+", "*"};

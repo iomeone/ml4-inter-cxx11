@@ -127,7 +127,7 @@ private:
     void turn_blit (void);
     void turn_rt (void);
     void croak (int err);
-    void gc (int const e2, int const e3, int const e4);
+    void gc (int const tag, int const e1, int const e2, int const e3, int const e4);
     void gcmark (int const root);
     void gclazy_sweep (void);
 

@@ -32,7 +32,7 @@ cek_type::at (int addr) const
 void
 cek_type::eval (void)
 {
-    m_kont = cons (KRt, 0, 0, m_env, 0);
+    m_kont = cons (KRt, 0, 0, m_env, cons (KStop, 0, 0, 0, 0));
     m_protect = m_kont;
     print_trace ();
     do {
@@ -94,9 +94,6 @@ cek_type::turn_rt (void)
     int const ktag = m_kont == 0 ? KStop : m_cell[m_kont].tag;
     switch (ktag) {
     case KStop:
-        if (m_kont == 0) {
-            m_kont = cons (KStop, 0, 0, 0, 0);
-        }
         break;
     case KRt:
         turn_krt ();
@@ -203,8 +200,8 @@ cek_type::turn_kletrec (int const ktag)
 void
 cek_type::turn_if (void)
 {
-    // (If _ m1 m2 m3) E K -> m1 E (KIf _ m2 m3 K)
-    int const k1 = cons (KIf, 0, m_cell[m_ctrl].e3, m_cell[m_ctrl].e4, m_kont);
+    // (If _ m1 m2 m3) E K -> m1 E (KIf m2 m3 E K)
+    int const k1 = cons (KIf, m_cell[m_ctrl].e3, m_cell[m_ctrl].e4, m_env, m_kont);
     m_ctrl = m_cell[m_ctrl].e2;
     m_kont = k1;
 }
@@ -212,18 +209,20 @@ cek_type::turn_if (void)
 void
 cek_type::turn_kif (void)
 {
-    // (Rt _ (BoolV true  _ _ _) _ _) E (KIf _ m2 m3 K) -> m2 E K
-    // (Rt _ (BoolV false _ _ _) _ _) E (KIf _ m2 m3 K) -> m3 E K
+    // (Rt _ (BoolV true  _ _ _) _ _) E1 (KIf m2 m3 E K) -> m2 E K
+    // (Rt _ (BoolV false _ _ _) _ _) E2 (KIf m2 m3 E K) -> m3 E K
     int const v = m_cell[m_ctrl].e2;
     if (m_cell[v].tag != BoolV) {
         croak (ExpectedBoolV);
     }
     else if (m_cell[v].e1) {
-        m_ctrl = m_cell[m_kont].e2;
+        m_ctrl = m_cell[m_kont].e1;
+        m_env  = m_cell[m_kont].e3;
         m_kont = m_cell[m_kont].e4;
     }
     else {
-        m_ctrl = m_cell[m_kont].e3;
+        m_ctrl = m_cell[m_kont].e2;
+        m_env  = m_cell[m_kont].e3;
         m_kont = m_cell[m_kont].e4;
     }
 }
@@ -267,8 +266,8 @@ cek_type::turn_kproc (void)
 void
 cek_type::turn_prim (void)
 {
-    // (Prim op m1 m2 _) E K -> m1 E (KPrim1 op m2 _ K)
-    int const k1 = cons (KPrim1, m_cell[m_ctrl].e1, m_cell[m_ctrl].e3, 0, m_kont);
+    // (Prim op m1 m2 _) E K -> m1 E (KPrim1 op m2 E K)
+    int const k1 = cons (KPrim1, m_cell[m_ctrl].e1, m_cell[m_ctrl].e3, m_env, m_kont);
     m_ctrl = m_cell[m_ctrl].e2;
     m_kont = k1;
 }
@@ -276,17 +275,18 @@ cek_type::turn_prim (void)
 void
 cek_type::turn_kprim1 (void)
 {
-    // (Rt _ v _ _) E (KPrim1 op m _ K) -> m E (KPrim2 op v _ K)
+    // (Rt _ v _ _) E1 (KPrim1 op m E K) -> m E (KPrim2 op v E K)
     int const v = m_cell[m_ctrl].e2;
-    int const k1 = cons (KPrim2, m_cell[m_kont].e1, v, 0, m_cell[m_kont].e4);
     m_ctrl = m_cell[m_kont].e2;
+    m_env  = m_cell[m_kont].e3;
+    int const k1 = cons (KPrim2, m_cell[m_kont].e1, v, m_env, m_cell[m_kont].e4);
     m_kont = k1;
 }
 
 void
 cek_type::turn_kprim2 (void)
 {
-    // (Rt _ v _ _) E (KPrim2 op u _ K) -> (Rt _ w _ _) E K
+    // (Rt _ v _ _) E1 (KPrim2 op u E K) -> (Rt _ w _ _) E K
     int const op = m_cell[m_kont].e1;
     int const u = m_cell[m_kont].e2;
     int const v = m_cell[m_ctrl].e2;
@@ -306,6 +306,7 @@ cek_type::turn_kprim2 (void)
         int const w = cons (IntV, m_cell[u].e1 * m_cell[v].e1, 0, 0, 0);
         m_ctrl = cons (Rt, 0, w, 0, 0);
     }
+    m_env  = m_cell[m_kont].e3;
     m_kont = m_cell[m_kont].e4;
 }
 

@@ -6,7 +6,7 @@ cek_type::cons (int const tag, int const e1, int const e2, int const e3, int con
     gclazy_sweep ();
     int const cell_size = m_cell.size ();
     if (m_sweep >= cell_size) {
-        gc (e2, e3, e4);
+        gc (tag, e1, e2, e3, e4);
         if (m_sweep >= cell_size) {
             m_cell.resize (cell_size * 2);
         }
@@ -21,13 +21,16 @@ cek_type::cons (int const tag, int const e1, int const e2, int const e3, int con
 }
 
 void
-cek_type::gc (int const e2, int const e3, int const e4)
+cek_type::gc (int const tag, int const e1, int const e2, int const e3, int const e4)
 {
     gcmark (0);
     gcmark (m_ctrl);
     gcmark (m_env);
     gcmark (m_kont);
     gcmark (m_protect);
+    if (tag == KIf) {
+        gcmark (e1);
+    }
     gcmark (e2);
     gcmark (e3);
     gcmark (e4);
