@@ -44,11 +44,11 @@ enum {
     KDeclRec,   // id _ env K       continuation for let rec declaration
     KLet,       // id exp env K     continuation for let expression
     KLetRec,    // id exp env K     continuation for let rec expression
-    KIf,        // _ exp2 exp3 K    continuation for if expression
+    KIf,        // exp2 exp3 env K  continuation for if expression
     KAp,        // _ exp env K      continuation for application expression
     KProc,      // id exp env K     continuation for procedure
-    KPrim1,     // op exp _ K       first continuation for primitive
-    KPrim2,     // op val _ K       second continuation for primitive
+    KPrim1,     // op exp env K     first continuation for primitive
+    KPrim2,     // op val env K     second continuation for primitive
 };
 
 struct cell_type {
