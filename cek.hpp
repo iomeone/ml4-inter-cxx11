@@ -111,6 +111,7 @@ private:
     int ctrl_nth_leftvalue (int const nth);
     void turn_krt (void);
     void turn_let (int const ktag);
+    void turn_letrec (int const ktag);
     void turn_klet (int const ktag);
     void turn_kletrec (int const ktag);
     void turn_if (void);

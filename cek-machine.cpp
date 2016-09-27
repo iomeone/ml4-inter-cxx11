@@ -7,6 +7,8 @@
 // ``Control Operators, the SECD-Machine, and the Lambda-Calculus'', (Jun 1986)
 //     https://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR197
 
+enum { IGNORE_DUMMY_VALUE = -1 };
+
 cek_type::cek_type ()
 {
     m_cell.resize (256);
@@ -52,13 +54,13 @@ cek_type::turn (void)
         turn_let (KDecl);
         break;
     case DeclRec:
-        turn_let (KDeclRec);
+        turn_letrec (KDeclRec);
         break;
     case Let:
         turn_let (KLet);
         break;
     case LetRec:
-        turn_let (KLetRec);
+        turn_letrec (KLetRec);
         break;
     case If:
         turn_if ();
@@ -148,12 +150,9 @@ void
 cek_type::turn_let (int const ktag)
 {
     // (Decl    x m1 _ _)  E K -> m1 E (KDecl    x _  E K)
-    // (DeclRec x m1 _ _)  E K -> m1 E (KDeclRec x _  E K)
     // (Let     x m1 m2 _) E K -> m1 E (KLet     x m2 E K)
-    // (LetRec  x m1 m2 _) E K -> m1 E (KLetRec  x m2 E K)
-    int const k1 = cons (ktag, m_cell[m_ctrl].e1, m_cell[m_ctrl].e3, m_env, m_kont);
+    m_kont = cons (ktag, m_cell[m_ctrl].e1, m_cell[m_ctrl].e3, m_env, m_kont);
     m_ctrl = m_cell[m_ctrl].e2;
-    m_kont = k1;
 }
 
 void
@@ -173,27 +172,22 @@ cek_type::turn_klet (int const ktag)
 }
 
 void
+cek_type::turn_letrec (int const ktag)
+{
+    // (DeclRec x m1 _ _)  E K -> m1 E1=(x DUMMY E) (KDeclRec x _  E1 K)
+    // (LetRec  x m1 m2 _) E K -> m1 E1=(x DUMMY E) (KLetRec  x m2 E1 K)
+    m_env = cons (Env, m_cell[m_ctrl].e1, IGNORE_DUMMY_VALUE, 0, m_env);
+    m_kont = cons (ktag, m_cell[m_ctrl].e1, m_cell[m_ctrl].e3, m_env, m_kont);
+    m_ctrl = m_cell[m_ctrl].e2;
+}
+
+void
 cek_type::turn_kletrec (int const ktag)
 {
-    int const y = m_cell[m_kont].e1;
-    int const v = m_cell[m_ctrl].e2;
+    // (Rt _ v _ _) E' (KDeclRec x _  E1=(x DUMMY E) K) -> (Rt _ v _ _) E1=(x v E) K
+    // (Rt _ v _ _) E' (KLetRec  x m2 E1=(x DUMMY E) K) -> m2 E1=(x v E) K
     int const e = m_cell[m_kont].e3;
-    if (m_cell[v].tag != Proc) {
-        // (Rt _ v _ _) E' (KLetRec y m E K) -> m (Env y v _ E) K
-        m_env = cons (Env, y, v, 0, e);
-    }
-    else {
-        // (Rt _ (Proc x m1 E1 _) _ _) E' (KLetRec y m E K)
-        //   -> m (Env y #v=(Proc x m1 (Env y v _ E1) _) _ E) K
-        int const e1 = m_cell[v].e3;
-        m_cell[v].e3 = cons (Env, y, v, 0, e1);
-        if (e1 == e) {
-            m_env = m_cell[v].e3;
-        }
-        else {
-            m_env = cons (Env, y, v, 0, e);
-        }
-    }
+    m_cell[e].e2 = m_cell[m_ctrl].e2;
     if (ktag == KLetRec) {
         m_ctrl = m_cell[m_kont].e2;
     }
@@ -344,7 +338,7 @@ cek_type::lookup (int const x)
 {
     // (Env x v _ E)
     for (int e = m_env; e != 0; e = m_cell[e].e4) {
-        if (x == m_cell[e].e1) {
+        if (x == m_cell[e].e1 && m_cell[e].e2 != IGNORE_DUMMY_VALUE) {
             return e;
         }
     }
