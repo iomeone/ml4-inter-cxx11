@@ -15,7 +15,7 @@ main (int argc, char* argv[])
     scanner_type token;
     parser_cb_cek_type exp (&cek);
     for (std::string line; ; ) {
-        if (! std::getline (std::cin, line) || line == "exit;;") {
+        if (! std::getline (std::cin, line) || line == "#quit;;") {
             break;
         }
         std::stringstream input (line);

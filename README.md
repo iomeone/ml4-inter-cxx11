@@ -15,7 +15,7 @@ under the small set grammar from Ocaml's one.
     $ ./ml4
     let rec fact = fun n -> if n < 1 then 1 else n * fact (n + -1) in fact 9;;
     362880
-    exit;;
+    #quit;;
 
 License
 ------
