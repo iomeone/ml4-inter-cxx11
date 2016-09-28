@@ -10,11 +10,11 @@ main (int argc, char* argv[])
 {
     scanner_type scanner;
     parser_cb_str_type output;
-    std::cout << "exit;; to quit." << std::endl;
+    std::cout << "#quit;; to quit." << std::endl;
     for (std::string line;;) {
         std::cout << "> "; std::cout.flush ();
         if (! std::getline (std::cin, line)) break;
-        if (line == "exit;;") break;
+        if (line == "#quit;;") break;
         std::istringstream input (line);
         output.clear ();
         if (parse (input, scanner, output)) {

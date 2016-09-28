@@ -15,9 +15,10 @@ public:
     void expr_let (void);
     void expr_let_rec (void);
     void expr_if (void);
-    void expr_fun (void);
+    void expr_funexpr (void);
     void expr_pexpr (void);
     void expr_pexpr_lt_pexpr (void);
+    void funexpr (void);
     void pexpr_pexpr_plus_mexpr (void);
     void pexpr_mexpr (void);
     void mexpr_mexpr_times_app (void);

@@ -51,7 +51,7 @@ parser_cb_str_type::prog_let (void)
 void
 parser_cb_str_type::prog_let_rec (void)
 {
-    // prog : 'let' 'rec' ID '=' expr ';;'
+    // prog : 'let' 'rec' ID '=' funexpr ';;'
     auto v = m_data.end () - 7;
     std::string t = "(DeclRec ";
     t += v[3] + " ";
@@ -76,7 +76,7 @@ parser_cb_str_type::expr_let (void)
 void
 parser_cb_str_type::expr_let_rec (void)
 {
-    // expr : 'let' 'rec' ID '=' expr 'in' expr
+    // expr : 'let' 'rec' ID '=' funexpr 'in' expr
     auto v = m_data.end () - 8;
     std::string t = "(LetRec ";
     t += v[3] + " ";
@@ -100,15 +100,9 @@ parser_cb_str_type::expr_if (void)
 }
 
 void
-parser_cb_str_type::expr_fun (void)
+parser_cb_str_type::expr_funexpr (void)
 {
-    // expr : 'fun' ID '->' expr
-    auto v = m_data.end () - 5;
-    std::string t = "(Fun ";
-    t += v[2] + " ";
-    t += v[4] + ")";
-    v[1] = t;
-    m_data.erase (m_data.end () - 3, m_data.end ());
+    // expr : funexpr
 }
 
 void
@@ -128,6 +122,18 @@ parser_cb_str_type::expr_pexpr_lt_pexpr (void)
     t += v[3] + ")";
     v[1] = t;
     m_data.erase (m_data.end () - 2, m_data.end ());
+}
+
+void
+parser_cb_str_type::funexpr (void)
+{
+    // funexpr : 'fun' ID '->' expr
+    auto v = m_data.end () - 5;
+    std::string t = "(Fun ";
+    t += v[2] + " ";
+    t += v[4] + ")";
+    v[1] = t;
+    m_data.erase (m_data.end () - 3, m_data.end ());
 }
 
 void

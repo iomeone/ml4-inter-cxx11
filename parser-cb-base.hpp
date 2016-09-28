@@ -13,9 +13,10 @@ public:
     virtual void expr_let (void) = 0;
     virtual void expr_let_rec (void) = 0;
     virtual void expr_if (void) = 0;
-    virtual void expr_fun (void) = 0;
+    virtual void expr_funexpr (void) = 0;
     virtual void expr_pexpr (void) = 0;
     virtual void expr_pexpr_lt_pexpr (void) = 0;
+    virtual void funexpr (void) = 0;
     virtual void pexpr_pexpr_plus_mexpr (void) = 0;
     virtual void pexpr_mexpr (void) = 0;
     virtual void mexpr_mexpr_times_app (void) = 0;

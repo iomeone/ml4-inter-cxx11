@@ -10,7 +10,7 @@ cols = [
   ";;", "in", "then", "else", ")", "+", "<", "*", "=", "->", "rec",
   "let", "if", "fun", "id", "int", "bool", "("]
 colg = [
-  :aexpr, :app, :mexpr, :pexpr, :expr, :prog]
+  :aexpr, :app, :mexpr, :funexpr, :pexpr, :expr, :prog]
 
 def grammar_table
   rule = Rzubr::Rule
@@ -18,15 +18,18 @@ def grammar_table
   prog = rule.name(:prog) \
     > rule[:expr, ';;'] \
     | rule['let', 'id', '=', :expr, ';;'] \
-    | rule['let', 'rec', 'id', '=', :expr, ';;']
+    | rule['let', 'rec', 'id', '=', :funexpr, ';;']
 
   expr = rule.name(:expr) \
     > rule['let', 'id', '=', :expr, 'in', :expr] \
-    | rule['let', 'rec', 'id', '=', :expr, 'in', :expr] \
+    | rule['let', 'rec', 'id', '=', :funexpr, 'in', :expr] \
     | rule['if', :expr, 'then', :expr, 'else', :expr] \
-    | rule['fun', 'id', '->', :expr] \
+    | rule[:funexpr] \
     | rule[:pexpr] \
     | rule[:pexpr, '<', :pexpr]
+
+  funexpr = rule.name(:funexpr) \
+    > rule['fun', 'id', '->', :expr]
 
   pexpr = rule.name(:pexpr) \
     > rule[:pexpr, '+', :mexpr] \
@@ -46,7 +49,7 @@ def grammar_table
     | rule['bool'] \
     | rule['(', :expr, ')']
 
-  g = (prog + expr + pexpr + mexpr + app + aexpr).start(:prog)
+  g = (prog + expr + funexpr + pexpr + mexpr + app + aexpr).start(:prog)
   Rzubr::LALR1.new.rule(g)
 end
 
@@ -148,7 +151,7 @@ def list_compact_table(reduce, base, check)
   puts '};'
   puts 'static const unsigned short RULE[] = {'
   check.each_slice(8) do |a|
-    puts '    ' + a.map{|x| '%#06x,' % [x] }.join(' ')
+    puts '    ' + a.map{|x| (0 == x ? '%6d,' : '%#06x,') % [x] }.join(' ')
   end
   puts '};'
 end

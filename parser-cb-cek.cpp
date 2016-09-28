@@ -53,7 +53,7 @@ parser_cb_cek_type::prog_let (void)
 void
 parser_cb_cek_type::prog_let_rec (void)
 {
-    // prog : 'let' 'rec' ID '=' exp ';;'
+    // prog : 'let' 'rec' ID '=' funexp ';;'
     int const y = m_cek->ctrl_lit (7-3);
     int const fn = m_cek->ctrl_exp (7-5);
     m_cek->ctrl_reduce (6, DeclRec, y, fn, 0, 0);
@@ -73,7 +73,7 @@ parser_cb_cek_type::expr_let (void)
 void
 parser_cb_cek_type::expr_let_rec (void)
 {
-    // expr : 'let' 'rec' ID '=' expr 'in' expr
+    // expr : 'let' 'rec' ID '=' funexpr 'in' expr
     int const x = m_cek->ctrl_lit (8-3);
     int const e1 = m_cek->ctrl_exp (8-5);
     int const e2 = m_cek->ctrl_exp (8-7);
@@ -91,12 +91,9 @@ parser_cb_cek_type::expr_if (void)
 }
 
 void
-parser_cb_cek_type::expr_fun (void)
+parser_cb_cek_type::expr_funexpr (void)
 {
-    // expr : 'fun' ID '->' expr
-    int const x = m_cek->ctrl_lit (5-2);
-    int const exp = m_cek->ctrl_exp (5-4);
-    m_cek->ctrl_reduce (4, Fun, x, exp, 0, 0);
+    // expr : funexpr
 }
 
 void
@@ -112,6 +109,15 @@ parser_cb_cek_type::expr_pexpr_lt_pexpr (void)
     int const exp1 = m_cek->ctrl_exp (4-1);
     int const exp2 = m_cek->ctrl_exp (4-3);
     m_cek->ctrl_reduce (3, Prim, Lt, exp1, exp2, 0);
+}
+
+void
+parser_cb_cek_type::funexpr (void)
+{
+    // funexpr : 'fun' ID '->' expr
+    int const x = m_cek->ctrl_lit (5-2);
+    int const exp = m_cek->ctrl_exp (5-4);
+    m_cek->ctrl_reduce (4, Fun, x, exp, 0, 0);
 }
 
 void

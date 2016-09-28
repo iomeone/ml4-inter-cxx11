@@ -124,5 +124,5 @@ cek_type::str (int const e) const
             break;
         }
     }
-    return std::move (out);
+    return out;
 }
