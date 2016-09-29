@@ -39,7 +39,7 @@ enum {
     Env,        // id val _ E       environment
     // continuation cell
     KStop,      // _ _ _ _
-    KRt,        // _ _ env K        fun x -> x
+    KRt,        // id _ env K       fun x -> x, id==0 means '-'
     KDecl,      // id _ env K       continuation for declaration
     KDeclRec,   // id _ env K       continuation for let rec declaration
     KLet,       // id exp env K     continuation for let expression
@@ -92,7 +92,7 @@ public:
     std::string result (void) const;
     std::string str_cek (void) const;
     cell_type const& at (int addr) const;
-    int lookup (int const x);
+    int lookup (int const x) const;
     void eval (void);
     void turn (void);
     // parser_callback interface

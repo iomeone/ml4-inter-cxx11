@@ -58,17 +58,24 @@ cek_type::print_trace (void)
 std::string
 cek_type::result (void) const
 {
-    if (m_cell[m_ctrl].tag == Rt) {
-        return str (m_cell[m_ctrl].e2);
-    }
-    else if (m_cell[m_ctrl].tag == Error) {
-        return str (m_ctrl);
+    // (Ref x) (Env x v _ E0) (KStop)
+    std::string t;
+    if (m_cell[m_ctrl].tag == Ref
+            && m_cell[m_env].tag == Env
+            && m_cell[m_kont].tag == KStop) {
+        int const x = m_cell[m_ctrl].e1;
+        int const e = lookup (x);
+        int const v = 0 == e ? 0 : m_cell[e].e2;
+        t = "val ";
+        t += symbol_table::instance ().name (x);
+        t += " = ";
+        t += str (v);
     }
     else {
-        std::string t = "unexpected CEK state\n";
+        t = "unexpected CEK state\n";
         t += str_cek ();
-        return t;
     }
+    return t;
 }
 
 std::string

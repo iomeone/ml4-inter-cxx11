@@ -16,7 +16,7 @@ cek_type::cek_type ()
     m_sweep = 1;
     m_ctrl = 0;
     m_env = 0;
-    m_kont = 0;
+    m_kont = cons (KStop, 0, 0, 0, 0);
     m_protect = 0;
     m_trace = false;
 }
@@ -34,7 +34,9 @@ cek_type::at (int addr) const
 void
 cek_type::eval (void)
 {
-    m_kont = cons (KRt, 0, 0, m_env, cons (KStop, 0, 0, 0, 0));
+    // M E0 (KRt - _ E0 (KStop)) -*-> (Ref x) (Env x v _ E0) (KStop)
+    m_env = m_cell[m_env].e4;   // 0 == m_cell[0].e4
+    m_kont = cons (KRt, -1, 0, m_env, m_kont);
     m_protect = m_kont;
     print_trace ();
     do {
@@ -138,12 +140,10 @@ cek_type::turn_rt (void)
 void
 cek_type::turn_krt (void)
 {
-    // (Rt v2) E' (KRt _ _ E K) -> (Rt v2) E K
-    m_env = m_cell[m_kont].e3;
+    // (Rt _ v _ _) E' (KRt x _ E (KStop)) -> (Ref x _ _ _) (Env x v _ E) (KStop)
+    m_env = cons (Env, m_cell[m_kont].e1, m_cell[m_ctrl].e2, 0, m_cell[m_kont].e3);
+    m_ctrl = cons (Ref, m_cell[m_kont].e1, 0, 0, 0);
     m_kont = m_cell[m_kont].e4;
-    if (m_kont == 0) {
-        m_kont = cons (KStop, 0, 0, 0, 0);
-    }
 }
 
 void
@@ -158,15 +158,17 @@ cek_type::turn_let (int const ktag)
 void
 cek_type::turn_klet (int const ktag)
 {
-    // (Rt _ v _ _) E' (KDecl x _ E K) -> (Rt _ v _ _) (Env x v _ E) K
-    // (Rt _ v _ _) E' (KLet  x m E K) -> m            (Env x v _ E) K
-    int const e = m_cell[m_kont].e3;
-    m_env = cons (Env, m_cell[m_kont].e1, m_cell[m_ctrl].e2, 0, e);
+    // (Rt _ v _ _) E' (KDecl x _ E (KRt _ _ E0 K))
+    //   -> (Rt _ v _ _) E1=(Env x v _ E) (KRt x _ E1 K)
+    // (Rt _ v _ _) E' (KLet  x m E K) -> m (Env x v _ E) K
+    int const x = m_cell[m_kont].e1;
+    m_env = cons (Env, x, m_cell[m_ctrl].e2, 0, m_cell[m_kont].e3);
     if (ktag == KLet) {
         m_ctrl = m_cell[m_kont].e2;
     }
     m_kont = m_cell[m_kont].e4;
     if (ktag == KDecl && m_cell[m_kont].tag == KRt) {
+        m_cell[m_kont].e1 = x;
         m_cell[m_kont].e3 = m_env;
     }
 }
@@ -184,15 +186,18 @@ cek_type::turn_letrec (int const ktag)
 void
 cek_type::turn_kletrec (int const ktag)
 {
-    // (Rt _ v _ _) E' (KDeclRec x _  E1=(x DUMMY E) K) -> (Rt _ v _ _) E1=(x v E) K
-    // (Rt _ v _ _) E' (KLetRec  x m2 E1=(x DUMMY E) K) -> m2 E1=(x v E) K
-    int const e = m_cell[m_kont].e3;
-    m_cell[e].e2 = m_cell[m_ctrl].e2;
+    // (Rt _ v _ _) E' (KDeclRec x _  E1=(x DUMMY E) (KRt _ _ E0 K))
+    //   -> (Rt _ v _ _) E1=(Env x v _ E) (KRt x _ E1 K)
+    // (Rt _ v _ _) E' (KLetRec  x m2 E1=(x DUMMY E) K) -> m2 E1=(Env x v _ E) K
+    int const x = m_cell[m_kont].e1;
+    m_env = m_cell[m_kont].e3;
+    m_cell[m_env].e2 = m_cell[m_ctrl].e2;
     if (ktag == KLetRec) {
         m_ctrl = m_cell[m_kont].e2;
     }
     m_kont = m_cell[m_kont].e4;
     if (ktag == KDeclRec && m_cell[m_kont].tag == KRt) {
+        m_cell[m_kont].e1 = x;
         m_cell[m_kont].e3 = m_env;
     }
 }
@@ -334,7 +339,7 @@ cek_type::turn_ref (void)
 }
 
 int
-cek_type::lookup (int const x)
+cek_type::lookup (int const x) const
 {
     // (Env x v _ E)
     for (int e = m_env; e != 0; e = m_cell[e].e4) {
@@ -366,8 +371,7 @@ cek_type::turn_blit (void)
 void
 cek_type::croak (int err)
 {
-    // C E K -> (Error err _ _ _) E protect
-    int const c1 = cons (Error, err, 0, 0, 0);
-    m_ctrl = c1;
+    // C E K -> (Rt _ (Error err) _ _) E protect=(KRt x _ E0 (KStop))
+    m_ctrl = cons (Rt, 0, cons (Error, err, 0, 0, 0), 0, 0);
     m_kont = m_protect;
 }

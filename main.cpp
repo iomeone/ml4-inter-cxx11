@@ -18,6 +18,14 @@ main (int argc, char* argv[])
         if (! std::getline (std::cin, line) || line == "#quit;;") {
             break;
         }
+        if (line == "#trace;;") {
+            cek.set_trace (true);
+            continue;
+        }
+        else if (line == "#untrace;;") {
+            cek.set_trace (false);
+            continue;
+        }
         std::stringstream input (line);
         exp.clear ();
         if (! parse (input, token, exp)) {
@@ -25,7 +33,7 @@ main (int argc, char* argv[])
         }
         else {
             cek.eval ();
-            std::cout << cek.result ()  << std::endl;
+            std::cout << cek.result () << std::endl;
         }
     }
     return EXIT_SUCCESS;

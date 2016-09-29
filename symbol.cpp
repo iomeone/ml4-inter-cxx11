@@ -27,7 +27,7 @@ symbol_table::name (symbol id)
     if (0 <= id && id < dict_size) {
         return m_dict[id];
     }
-    return "_";
+    return "-";
 }
 
 symbol
