@@ -171,7 +171,6 @@ engine_type::dump (std::ostream& out) const
     out << "C: " << m_ctrl << std::endl;
     out << "E: " << m_env << std::endl;
     out << "K: " << m_kont << std::endl;
-    int wdc = 0;
     cell_type* cell = m_bottom;
     do {
         out << (m_bottom == cell ? "B" : m_top == cell ? "T" : " ");
@@ -181,5 +180,5 @@ engine_type::dump (std::ostream& out) const
         cell->dump (out);
         out << std::endl;
         cell = cell->gcnext ();
-    } while (cell != m_bottom || ++wdc >= 10);
+    } while (cell != m_bottom);
 }
