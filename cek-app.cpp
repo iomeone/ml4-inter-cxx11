@@ -76,7 +76,7 @@ app1_kont_type::eval_step (engine_type* vm, value_type* v)
         vm->m_ctrl = m_exp2;
     }
     else {
-        croak (vm, new expect_closure_error ());
+        croak (vm, retain_cell (vm, new expect_closure_error ()));
     }
 }
 

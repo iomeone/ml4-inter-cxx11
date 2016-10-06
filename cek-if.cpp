@@ -59,7 +59,7 @@ if_kont_type::eval_step (engine_type* vm, value_type* v)
         vm->m_kont = m_kont;
     }
     else {
-        croak (vm, new expect_bool_error ());
+        croak (vm, retain_cell (vm, new expect_bool_error ()));
     }
 }
 
