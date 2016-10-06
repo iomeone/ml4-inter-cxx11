@@ -18,3 +18,4 @@ private:
 };
 
 symbol intern (std::string const& str);
+std::string symbol_name (symbol const id);

@@ -3,14 +3,14 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include "cek.hpp"
 #include "parser.hpp"
 #include "parser-cb-cek.hpp"
+#include "cek-eval.hpp"
 
 int
 main (int argc, char* argv[])
 {
-    cek_type cek;
+    engine_type cek;
     cek.set_trace (false);
     scanner_type token;
     parser_cb_cek_type exp (&cek);
@@ -32,8 +32,9 @@ main (int argc, char* argv[])
             std::cout << "SyntaxError!" << std::endl;
         }
         else {
-            cek.eval ();
-            std::cout << cek.result () << std::endl;
+            cek.eval (std::cout);
+            cek.print_result (std::cout);
+            std::cout << std::endl;
         }
     }
     return EXIT_SUCCESS;

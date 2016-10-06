@@ -1,32 +1,40 @@
 #include "scanner.hpp"
 #include "parser-cb-cek.hpp"
 
-parser_cb_cek_type::parser_cb_cek_type (cek_type* cek)
+parser_cb_cek_type::parser_cb_cek_type (engine_type* vm)
 {
-    m_cek = cek;
+    m_engine = vm;
 }
 
 void
 parser_cb_cek_type::clear (void)
 {
-    m_cek->begin_ctrl ();
+    m_engine->m_shunting_yard = retain_cell (m_engine, new shunting_yard_type);
+}
+
+void
+parser_cb_cek_type::accept (void)
+{
+    m_engine->m_ctrl = m_engine->m_shunting_yard->term (1);
+    m_engine->m_shunting_yard = nullptr;
 }
 
 void
 parser_cb_cek_type::shift (int kind, std::string const& value)
 {
+    auto yy = m_engine->m_shunting_yard;
     switch (kind) {
     case SID:
-        m_cek->ctrl_shift (intern (value));
+        yy->shift (intern (value));
         break;
     case SINTV:
-        m_cek->ctrl_shift (std::stoi (value));
+        yy->shift (std::stoi (value));
         break;
     case SBOOL:
-        m_cek->ctrl_shift (value == "true" ? 1 : 0);
+        yy->shift (value == "true" ? 1 : 0);
         break;
     default:
-        m_cek->ctrl_shift (0); // dummy
+        yy->shift (0); // dummy
         break;
     }
 }
@@ -34,60 +42,66 @@ parser_cb_cek_type::shift (int kind, std::string const& value)
 void
 parser_cb_cek_type::prog_expr (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // prog : expr ';;'
-    int const exp = m_cek->ctrl_exp (3-1);
-    m_cek->ctrl_reduce (2, exp);
-    m_cek->end_ctrl ();
+    term_type* const m = yy->term (3-1);
+    yy->reduce (2, m);
+    accept ();
 }
 
 void
 parser_cb_cek_type::prog_let (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // prog : 'let' ID '=' expr ';;'
-    int const x = m_cek->ctrl_lit (6-2);
-    int const exp = m_cek->ctrl_exp (6-4);
-    m_cek->ctrl_reduce (5, Decl, x, exp, 0, 0);
-    m_cek->end_ctrl ();
+    int const x = yy->lit (6-2);
+    term_type* const m = yy->term (6-4);
+    yy->reduce (5, retain_cell (m_engine, new decl_type (x, m)));
+    accept ();
 }
 
 void
 parser_cb_cek_type::prog_let_rec (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // prog : 'let' 'rec' ID '=' funexp ';;'
-    int const y = m_cek->ctrl_lit (7-3);
-    int const fn = m_cek->ctrl_exp (7-5);
-    m_cek->ctrl_reduce (6, DeclRec, y, fn, 0, 0);
-    m_cek->end_ctrl ();
+    int const x = yy->lit (7-3);
+    term_type* const m = yy->term (7-5);
+    yy->reduce (6, retain_cell (m_engine, new declrec_type (x, m)));
+    accept ();
 }
 
 void
 parser_cb_cek_type::expr_let (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // expr : 'let' ID '=' expr 'in' expr
-    int const x = m_cek->ctrl_lit (7-2);
-    int const e1 = m_cek->ctrl_exp (7-4);
-    int const e2 = m_cek->ctrl_exp (7-6);
-    m_cek->ctrl_reduce (6, Let, x, e1, e2, 0);
+    int const x = yy->lit (7-2);
+    term_type* const m1 = yy->term (7-4);
+    term_type* const m2 = yy->term (7-6);
+    yy->reduce (6, retain_cell (m_engine, new let_type (x, m1, m2)));
 }
 
 void
 parser_cb_cek_type::expr_let_rec (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // expr : 'let' 'rec' ID '=' funexpr 'in' expr
-    int const x = m_cek->ctrl_lit (8-3);
-    int const e1 = m_cek->ctrl_exp (8-5);
-    int const e2 = m_cek->ctrl_exp (8-7);
-    m_cek->ctrl_reduce (7, LetRec, x, e1, e2, 0);
+    int const x = yy->lit (8-3);
+    term_type* const m1 = yy->term (8-5);
+    term_type* const m2 = yy->term (8-7);
+    yy->reduce (7, retain_cell (m_engine, new letrec_type (x, m1, m2)));
 }
 
 void
 parser_cb_cek_type::expr_if (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // expr : 'if' expr 'then' expr 'else' expr
-    int const e1 = m_cek->ctrl_exp (7-2);
-    int const e2 = m_cek->ctrl_exp (7-4);
-    int const e3 = m_cek->ctrl_exp (7-6);
-    m_cek->ctrl_reduce (6, If, 0, e1, e2, e3);
+    term_type* const m1 = yy->term (7-2);
+    term_type* const m2 = yy->term (7-4);
+    term_type* const m3 = yy->term (7-6);
+    yy->reduce (6, retain_cell (m_engine, new if_type (m1, m2, m3)));
 }
 
 void
@@ -105,28 +119,31 @@ parser_cb_cek_type::expr_pexpr (void)
 void
 parser_cb_cek_type::expr_pexpr_lt_pexpr (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // expr : pexpr '<' pexpr
-    int const exp1 = m_cek->ctrl_exp (4-1);
-    int const exp2 = m_cek->ctrl_exp (4-3);
-    m_cek->ctrl_reduce (3, Prim, Lt, exp1, exp2, 0);
+    term_type* const m1 = yy->term (4-1);
+    term_type* const m2 = yy->term (4-3);
+    yy->reduce (3, retain_cell (m_engine, new prim_type (PRIM_LT, m1, m2)));
 }
 
 void
 parser_cb_cek_type::funexpr (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // funexpr : 'fun' ID '->' expr
-    int const x = m_cek->ctrl_lit (5-2);
-    int const exp = m_cek->ctrl_exp (5-4);
-    m_cek->ctrl_reduce (4, Fun, x, exp, 0, 0);
+    int const x = yy->lit (5-2);
+    term_type* const m = yy->term (5-4);
+    yy->reduce (4, retain_cell (m_engine, new fun_type (x, m)));
 }
 
 void
 parser_cb_cek_type::pexpr_pexpr_plus_mexpr (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // pexpr : pexpr '+' mexpr
-    int const exp1 = m_cek->ctrl_exp (4-1);
-    int const exp2 = m_cek->ctrl_exp (4-3);
-    m_cek->ctrl_reduce (3, Prim, Plus, exp1, exp2, 0);
+    term_type* const m1 = yy->term (4-1);
+    term_type* const m2 = yy->term (4-3);
+    yy->reduce (3, retain_cell (m_engine, new prim_type (PRIM_PLUS, m1, m2)));
 }
 
 void
@@ -138,10 +155,11 @@ parser_cb_cek_type::pexpr_mexpr (void)
 void
 parser_cb_cek_type::mexpr_mexpr_times_app (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // mexpr : mexpr '*' app
-    int const exp1 = m_cek->ctrl_exp (4-1);
-    int const exp2 = m_cek->ctrl_exp (4-3);
-    m_cek->ctrl_reduce (3, Prim, Mult, exp1, exp2, 0);
+    term_type* const m1 = yy->term (4-1);
+    term_type* const m2 = yy->term (4-3);
+    yy->reduce (3, retain_cell (m_engine, new prim_type (PRIM_MULT, m1, m2)));
 }
 
 void
@@ -153,10 +171,11 @@ parser_cb_cek_type::mexpr_app (void)
 void
 parser_cb_cek_type::app_app_aexpr (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // app : app aexpr
-    int const exp1 = m_cek->ctrl_exp (3-1);
-    int const exp2 = m_cek->ctrl_exp (3-2);
-    m_cek->ctrl_reduce (2, Ap, 0, exp1, exp2, 0);
+    term_type* const m1 = yy->term (3-1);
+    term_type* const m2 = yy->term (3-2);
+    yy->reduce (2, retain_cell (m_engine, new app_type (m1, m2)));
 }
 
 void
@@ -168,31 +187,35 @@ parser_cb_cek_type::app_aexpr (void)
 void
 parser_cb_cek_type::aexpr_id (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // aexpr : ID
-    int const c = m_cek->ctrl_lit (2-1);
-    m_cek->ctrl_reduce (1, Ref, c, 0, 0, 0);
+    int const x = yy->lit (2-1);
+    yy->reduce (1, retain_cell (m_engine, new ref_type (x)));
 }
 
 void
 parser_cb_cek_type::aexpr_intv (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // aexpr : INTV
-    int const c = m_cek->ctrl_lit (2-1);
-    m_cek->ctrl_reduce (1, ILit, c, 0, 0, 0);
+    int const c = yy->lit (2-1);
+    yy->reduce (1, retain_cell (m_engine, new ilit_type (c)));
 }
 
 void
 parser_cb_cek_type::aexpr_bool (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // aexpr : BOOLV
-    int const c = m_cek->ctrl_lit (2-1);
-    m_cek->ctrl_reduce (1, BLit, c, 0, 0, 0);
+    int const c = yy->lit (2-1);
+    yy->reduce (1, retain_cell (m_engine, new blit_type (c)));
 }
 
 void
 parser_cb_cek_type::aexpr_lparen_expr_rparen (void)
 {
+    auto yy = m_engine->m_shunting_yard;
     // aexpr : '(' expr ')'
-    int const exp = m_cek->ctrl_exp (4-2);
-    m_cek->ctrl_reduce (3, exp);
+    term_type* const m = yy->term (4-2);
+    yy->reduce (3, m);
 }

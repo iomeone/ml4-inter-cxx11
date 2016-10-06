@@ -1,12 +1,13 @@
 #pragma once
 #include "parser-cb-base.hpp"
 #include "symbol.hpp"
-#include "cek.hpp"
+#include "cek-eval.hpp"
 
 class parser_cb_cek_type : public parser_callback_base {
 public:
-    parser_cb_cek_type (cek_type* cek);
+    parser_cb_cek_type (engine_type* vm);
     void clear (void);
+    void accept (void);
     void shift (int kind, std::string const& value);
     void prog_expr (void);
     void prog_let (void);
@@ -30,5 +31,5 @@ public:
     void aexpr_lparen_expr_rparen (void);
 
 private:
-    cek_type* m_cek;
+    engine_type* m_engine;
 };

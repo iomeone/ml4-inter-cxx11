@@ -35,3 +35,9 @@ intern (std::string const& str)
 {
     return symbol_table::instance ().intern (str);
 }
+
+std::string
+symbol_name (symbol const id)
+{
+    return symbol_table::instance ().name (id);
+}
