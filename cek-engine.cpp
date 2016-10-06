@@ -69,8 +69,7 @@ engine_type::print_result (std::ostream& out) const
 void
 engine_type::retain (cell_type* cell)
 {
-    //if (m_free == m_bottom && m_bottom->gcprev () != m_top && m_gccount > 255) {
-    if (m_free == m_bottom && m_bottom->gcprev () != m_top) {
+    if (m_free == m_bottom && m_bottom->gcprev () != m_top && m_gccount > 255) {
         gc (cell);
     }
     cell_type* back = m_free->gcprev ();
