@@ -14,7 +14,7 @@ under the small set grammar from Ocaml's one.
     $ make ml4
     $ ./ml4
     let rec fact = fun n -> if n < 1 then 1 else n * fact (n + -1) in fact 9;;
-    val - = 362880
+    val it = 362880
     #quit;;
 
 License
