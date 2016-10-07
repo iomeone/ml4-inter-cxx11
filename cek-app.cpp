@@ -4,6 +4,21 @@
 #include "cek-app2-kont.hpp"
 #include "cek-error.hpp"
 
+// Lamda calculus application `expr expr` is evaluated with two stage
+// continuations:
+//
+//     function (exp1, exp2, env, kont) {         /* app_type */
+//       eval (exp1, env, function (value1) {     /* app1_kont_type */
+//         if (match (value1, closure_type{x, m, e}))
+//           eval (exp2, env, function (value2) { /* app2_kont_type */
+//             eval (m, new env_type (x, value2, e), kont);
+//           });
+//         else
+//           croak ("expected closure");
+//         }
+//       })
+//     };
+
 app_type::app_type (term_type* m1, term_type* m2)
     : term_type (), m_exp1 (m1), m_exp2 (m2)
 {
@@ -19,6 +34,7 @@ app2_kont_type::app2_kont_type (symbol x, term_type* m, env_type* e, kont_type* 
 {
 }
 
+// show print style
 void
 app_type::print (std::ostream& out) const
 {
@@ -37,6 +53,7 @@ app2_kont_type::print (std::ostream& out) const
     printformat (out, "(kapp2 $1x $2m #$3p# $4m)", m_id, m_exp, m_env, m_kont);
 }
 
+// show dump style
 void
 app_type::dump (std::ostream& out) const
 {
@@ -54,6 +71,8 @@ app2_kont_type::dump (std::ostream& out) const
 {
     printformat (out, "(kapp2 $1x $2p $3p $4p)", m_id, m_exp, m_env, m_kont);
 }
+
+// evaluation
 
 // (app m1 m2) E K -> m1 E (kapp1 m2 E K)
 void
@@ -89,6 +108,7 @@ app2_kont_type::eval_step (engine_type* vm, value_type* v)
     vm->m_kont = m_kont;
 }
 
+// garbage collection copying
 cell_type*
 app_type::gcscan (cell_type* scan, int black)
 {

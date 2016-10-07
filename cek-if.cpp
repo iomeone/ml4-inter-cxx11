@@ -3,6 +3,22 @@
 #include "cek-if-kont.hpp"
 #include "cek-error.hpp"
 
+// if expression term `if exp1 then exp2 else exp3`
+//
+//     function (exp1, exp2, exp3, env, kont) {  /* if_type */
+//       eval (exp1, env, function (value1) {    /* if_kont_type */
+//         if (match (value1, value_bool_type{b}) {
+//           if (b)
+//             eval (exp2, env, kont);
+//           else
+//             eval (exp3, env, kont);
+//         }
+//         else {
+//           croak ("expected boolean");
+//         }
+//       });
+//     }
+
 if_type::if_type (term_type* m1, term_type* m2, term_type* m3)
     : term_type (), m_exp1 (m1), m_exp2 (m2), m_exp3 (m3)
 {
@@ -13,6 +29,7 @@ if_kont_type::if_kont_type (term_type* m2, term_type* m3, env_type* e, kont_type
 {
 }
 
+// show print style
 void
 if_type::print (std::ostream& out) const
 {
@@ -25,6 +42,7 @@ if_kont_type::print (std::ostream& out) const
     printformat (out, "(kif $2m $3m #$4p# $5m)", 0, m_exp2, m_exp3, m_env, m_kont);
 }
 
+// show dump style
 void
 if_type::dump (std::ostream& out) const
 {
@@ -36,6 +54,8 @@ if_kont_type::dump (std::ostream& out) const
 {
     printformat (out, "(kif $2p $3p $4p $5p)", 0, m_exp2, m_exp3, m_env, m_kont);
 }
+
+// evaluation
 
 // (if m1 m2 m3) E K -> m1 E (kif m2 m3 E K)
 void
@@ -63,6 +83,7 @@ if_kont_type::eval_step (engine_type* vm, value_type* v)
     }
 }
 
+// garbage collection copying
 cell_type*
 if_type::gcscan (cell_type* scan, int black)
 {

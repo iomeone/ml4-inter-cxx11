@@ -7,6 +7,26 @@
 #include "cek-rt-ctrl.hpp"
 #include "cek-error.hpp"
 
+// primitive expression term `exp1 < exp2`, `exp1 + exp2`, or `exp1 * exp2`.
+//
+//     function (op, exp1, exp2, env, kont) {   /* prim_type */
+//       eval (exp1, env, function (value1) {   /* prim1_kont_type */
+//         eval (exp2, env, function (value2) { /* prim2_kont_type */
+//           if (match (value1, value_int_type{lhs})
+//               && match (value2, value_int_type{rhs})) {
+//             switch (op) {
+//             case '<': kont (new value_bool_type (lhs < rhs)); break;
+//             case '+': kont (new value_int_type (lhs + rhs));  break;
+//             case '*': kont (new value_int_type (lhs * rhs));  break;
+//             }
+//           }
+//           else { 
+//             croak ("expected integer");
+//           }
+//         });
+//       });
+//     }
+
 prim_type::prim_type (int op, term_type* m1, term_type* m2)
     : term_type (), m_op (op), m_exp1 (m1), m_exp2 (m2)
 {
@@ -22,6 +42,7 @@ prim2_kont_type::prim2_kont_type (int op, value_type* v, env_type* e, kont_type*
 {
 }
 
+// show print style
 void
 prim_type::print (std::ostream& out) const
 {
@@ -40,6 +61,7 @@ prim2_kont_type::print (std::ostream& out) const
     printformat (out, "(kprim2 $1o $2m #$3p# $4m)", m_op, m_value, m_env, m_kont);
 }
 
+// show dump style
 void
 prim_type::dump (std::ostream& out) const
 {
@@ -57,6 +79,8 @@ prim2_kont_type::dump (std::ostream& out) const
 {
     printformat (out, "(kprim2 $1o $2p $3p $4p)", m_op, m_value, m_env, m_kont);
 }
+
+// evaluation
 
 // (prim op m1 m2) E K -> m1 E (kprim1 op m2 E K)
 void
@@ -76,7 +100,7 @@ prim1_kont_type::eval_step (engine_type* vm, value_type* v)
     vm->m_kont = retain_cell (vm, new prim2_kont_type (m_op, v, m_env, m_kont));
 }
 
-// (rt v) E' (kprim2 op u E K) -> (Rt w) E K
+// (rt v) E' (kprim2 op u E K) -> (rt w) E K
 void
 prim2_kont_type::eval_step (engine_type* vm, value_type* v)
 {
@@ -104,6 +128,7 @@ prim2_kont_type::eval_step (engine_type* vm, value_type* v)
     }
 }
 
+// garbage collection copying
 cell_type*
 prim_type::gcscan (cell_type* scan, int black)
 {

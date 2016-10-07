@@ -3,16 +3,21 @@
 #include "cek-rt-kont.hpp"
 #include "cek-ref.hpp"
 
+// pass return value to the continuation control
+
 rt_type::rt_type (value_type* v)
     : ctrl_type (), m_value (v)
 {
 }
+
+// top level continuation: funtion (x) { x; }
 
 rt_kont_type::rt_kont_type (symbol x, env_type* e, kont_type* k)
     : kont_type (e, k), m_id (x)
 {
 }
 
+// show print style
 void
 rt_type::print (std::ostream& out) const
 {
@@ -25,6 +30,7 @@ rt_kont_type::print (std::ostream& out) const
     printformat (out, "(krt $1x #$2p# $3m)", m_id, m_env, m_kont);
 }
 
+// show dump style
 void
 rt_type::dump (std::ostream& out) const
 {
@@ -36,6 +42,8 @@ rt_kont_type::dump (std::ostream& out) const
 {
     printformat (out, "(krt $1x $2p $3p)", m_id, m_env, m_kont);
 }
+
+// evaluation
 
 // (rt v) E K
 void
@@ -53,6 +61,7 @@ rt_kont_type::eval_step (engine_type* vm, value_type* v)
     vm->m_kont = m_kont;
 }
 
+// garbage collection copying
 cell_type*
 rt_type::gcscan (cell_type* scan, int black)
 {

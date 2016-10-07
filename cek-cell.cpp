@@ -1,5 +1,18 @@
 #include "cek-eval.hpp"
 
+//%markdown
+//
+// Base Class Cell
+// ====
+//
+// To take flavor of the Baker's treadmill garbage collection (GC), 
+// all of objects are doubly-linked together in a ring structure
+// keeping the condition:
+//
+//         cell == cell->gcprev->gcnext
+//      && cell == cell->gcnext->gcprev
+
+// make single cell ring structure.
 cell_type::cell_type ()
 {
     m_gccolor = 0;
@@ -7,24 +20,39 @@ cell_type::cell_type ()
     m_gcnext = this;
 }
 
+// show print style
 void
 cell_type::print (std::ostream& out) const
 {
     out << "<cell>";
 }
 
+// show dump style
 void
 cell_type::dump (std::ostream& out) const
 {
     out << "(cell)";
 }
 
+// It is necessary to implement for all extended classes
+// to copy children into to-space at GC time.
+// formal parameter scan is scan pointer of copying GC.
+// formal parameter black is current black color code.
+//
+//     for (cell_type* slot : children) {
+//         scan = gccopy (slot, black);
+//     }
+//     return scan;
+//
+// only return scan pointer for nothing children.
 cell_type*
 cell_type::gcscan (cell_type* scan, int black)
 {
     return scan;
 }
 
+// make cell using by painting black and copying to-space.
+// this is core part of stop-and-copying GC.
 cell_type*
 cell_type::gccopy (cell_type* slot, int black)
 {
@@ -36,6 +64,7 @@ cell_type::gccopy (cell_type* slot, int black)
     return scan;
 }
 
+// remove this cell from the treadmill.
 cell_type*
 cell_type::gcdelete (void)
 {
@@ -45,6 +74,7 @@ cell_type::gcdelete (void)
     return next_cell;
 }
 
+// remove cell and insert cell after *this* cell.
 cell_type*
 cell_type::gcinsert (cell_type* cell)
 {
@@ -57,6 +87,25 @@ cell_type::gcinsert (cell_type* cell)
     return cell;
 }
 
+// apply style template
+//
+//     printformat (out, "(fun $1x -> $2m)", m_id, m_exp);
+//
+// template format:
+//
+//     '$' [1-5] [dbxomp]
+//         ----- --------
+//         arg   look
+//
+// look code:
+//
+//     'd'  decimal number
+//     'b'  boolean notation ("true" / "false")
+//     'x'  variable symbol name
+//     'o'  binary operator name ("<" / "+" / "*")
+//     'm'  recursive print
+//     'p'  pinter notation as "%p" of C's sprintf (3) function
+//
 void
 cell_type::printformat (std::ostream& out, std::string const& src,
     int x1, cell_type const* m2, cell_type const* m3,
